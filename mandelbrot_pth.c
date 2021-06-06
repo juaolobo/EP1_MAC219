@@ -16,7 +16,9 @@ int iteration_max = 200;
 
 int image_size;
 unsigned char **image_buffer;
+
 int thread_work_amount = 0;
+int n_threads;
 
 int i_x_max;
 int i_y_max;
@@ -131,14 +133,17 @@ void * compute_mandelbrot(void *args){
     int start = thread_work_amount * thread_num;
     int end = thread_work_amount * (thread_num + 1);
 
-    for(i_y = start; i_y < end; i_y++){
+    if (thread_num == (n_threads-1))
+        end = i_x_max;
+
+    for(i_y = 0; i_y < i_y_max; i_y++){
         c_y = c_y_min + i_y * pixel_height;
 
         if(fabs(c_y) < pixel_height / 2){
             c_y = 0.0;
         };
 
-        for(i_x = 0; i_x < i_x_max; i_x++){
+        for(i_x = start; i_x < end; i_x++){
             c_x         = c_x_min + i_x * pixel_width;
 
             z_x         = 0.0;
@@ -164,12 +169,12 @@ void * compute_mandelbrot(void *args){
     return NULL;
 };
 
-void spin_threads(int num_threads) {
+void spin_threads() {
     pthread_t thread_ids[MAX_THREADS];
-    thread_work_amount = image_size / num_threads;
+    thread_work_amount = image_size / n_threads;
     
     int num[MAX_THREADS];
-    for (int i = 0; i < num_threads; i++) {
+    for (int i = 0; i < n_threads; i++) {
         num[i] = i;
         if (pthread_create (&thread_ids[i], NULL, compute_mandelbrot, (void *) &num[i]) != 0) {
             printf("Erro na criação da thread!\n");
@@ -177,7 +182,7 @@ void spin_threads(int num_threads) {
         }
     }
 
-    for(int i = 0; i < num_threads; i++) {
+    for(int i = 0; i < n_threads; i++) {
         if (pthread_join (thread_ids[i], NULL) != 0) {
             printf("Deu erro na espera das threads!\n");
             exit(3);
@@ -187,10 +192,12 @@ void spin_threads(int num_threads) {
 
 int main(int argc, char *argv[]){
 
+
+    n_threads = atoi(argv[6]);
     init(argc, argv);
 
     allocate_image_buffer();
-    spin_threads(atoi(argv[6]));
+    spin_threads();
 
     write_to_file();
 

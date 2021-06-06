@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <pthread.h>
-#define MAX_THREADS 32
 
 double c_x_min;
 double c_x_max;
@@ -16,9 +14,6 @@ int iteration_max = 200;
 
 int image_size;
 unsigned char **image_buffer;
-
-int thread_work_amount = 0;
-int n_threads;
 
 int i_x_max;
 int i_y_max;
@@ -58,10 +53,10 @@ void init(int argc, char *argv[]){
     if(argc < 6){
         printf("usage: ./mandelbrot_seq c_x_min c_x_max c_y_min c_y_max image_size\n");
         printf("examples with image_size = 11500:\n");
-        printf("    Full Picture:         ./mandelbrot_pth -2.5 1.5 -2.0 2.0 11500\n");
-        printf("    Seahorse Valley:      ./mandelbrot_pth -0.8 -0.7 0.05 0.15 11500\n");
-        printf("    Elephant Valley:      ./mandelbrot_pth 0.175 0.375 -0.1 0.1 11500\n");
-        printf("    Triple Spiral Valley: ./mandelbrot_pth -0.188 -0.012 0.554 0.754 11500\n");
+        printf("    Full Picture:         ./mandelbrot_seq -2.5 1.5 -2.0 2.0 11500\n");
+        printf("    Seahorse Valley:      ./mandelbrot_seq -0.8 -0.7 0.05 0.15 11500\n");
+        printf("    Elephant Valley:      ./mandelbrot_seq 0.175 0.375 -0.1 0.1 11500\n");
+        printf("    Triple Spiral Valley: ./mandelbrot_seq -0.188 -0.012 0.554 0.754 11500\n");
         exit(0);
     }
     else{
@@ -116,13 +111,12 @@ void write_to_file(){
     fclose(file);
 };
 
-void * compute_mandelbrot(void *args){
+void compute_mandelbrot(){
     double z_x;
     double z_y;
     double z_x_squared;
     double z_y_squared;
     double escape_radius_squared = 4;
-    int thread_num = *((int *) args);
 
     int iteration;
     int i_x;
@@ -130,11 +124,6 @@ void * compute_mandelbrot(void *args){
 
     double c_x;
     double c_y;
-    int start = thread_work_amount * thread_num;
-    int end = thread_work_amount * (thread_num + 1);
-
-    if (thread_num == (n_threads - 1))
-        end = i_x_max;
 
     for(i_y = 0; i_y < i_y_max; i_y++){
         c_y = c_y_min + i_y * pixel_height;
@@ -143,7 +132,7 @@ void * compute_mandelbrot(void *args){
             c_y = 0.0;
         };
 
-        for(i_x = start; i_x < end; i_x++){
+        for(i_x = 0; i_x < i_x_max; i_x++){
             c_x         = c_x_min + i_x * pixel_width;
 
             z_x         = 0.0;
@@ -166,37 +155,14 @@ void * compute_mandelbrot(void *args){
             // update_rgb_buffer(iteration, i_x, i_y);
         };
     };
-    return NULL;
 };
 
-void spin_threads() {
-    pthread_t thread_ids[MAX_THREADS];
-    thread_work_amount = image_size / n_threads;
-    
-    int num[MAX_THREADS];
-    for (int i = 0; i < n_threads; i++) {
-        num[i] = i;
-        if (pthread_create (&thread_ids[i], NULL, compute_mandelbrot, (void *) &num[i]) != 0) {
-            printf("Erro na criação da thread!\n");
-            exit(1);
-        }
-    }
-
-    for(int i = 0; i < n_threads; i++) {
-        if (pthread_join (thread_ids[i], NULL) != 0) {
-            printf("Deu erro na espera das threads!\n");
-            exit(3);
-        }
-    }
-}
-
 int main(int argc, char *argv[]){
-    char * temp = getenv("OMP_NUM_THREADS");
-    n_threads = atoi(temp);
     init(argc, argv);
 
     // allocate_image_buffer();
-    spin_threads();
+
+    compute_mandelbrot();
 
     // write_to_file();
 

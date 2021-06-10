@@ -1,4 +1,4 @@
 output.ppm
-mandelbrot_pth
-mandelbrot_seq
-mandelbrot_omp
+./mandelbrot_pth
+./mandelbrot_seq
+./mandelbrot_omp

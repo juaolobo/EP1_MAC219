@@ -195,10 +195,11 @@ int main(int argc, char *argv[]){
     n_threads = atoi(temp);
     init(argc, argv);
 
-    // allocate_image_buffer();
+    allocate_image_buffer();
+    
     spin_threads();
 
-    // write_to_file();
+    write_to_file();
 
     return 0;
 };

@@ -32,7 +32,7 @@ for d in dirs:
 						content += entradas[i] + ',' + data_[0] + ',' + data_[2] + ',' + filename + ',' + num + ',' + d +'\n'
 						i +=1
 
-with open('C:/Users/jfl-1/Downloads/ep1/EP1_MAC219-main' + '/all_files.csv', "w") as wr:
+with open('/home/hiroshi/Área de Trabalho/EPs e Exercícios/Paralela/EP1_MAC219' + '/all_files.csv', "w") as wr:
 	wr.write(content)
 
 
